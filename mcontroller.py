@@ -42,7 +42,7 @@ class MController:
 
     def route_packet(self, package:tuple[int]): 
         dst_addr = y3ip.get_addr(package)[1]          
-        if dst_addr in self.meta.get("local_address", []):
+        if dst_addr in self.meta.get("local_addresses", []):
             next_hop = (0, 0) # interface 0 is application manager
         else:
             next_hop = self.router[dst_addr]
