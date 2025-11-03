@@ -3,31 +3,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 from router import Router
 from iface import Interface, AppManager
-from protocols import Y3IP
-
-def parse_y3ip(data:bytes):
-    '''returns
-    dst_addr: tuple[int]
-    src_addr: tuple[int]
-    mode: int (0-min delay, 1-max_bandwidth, 2-max_safety)
-    ttl: int
-    nt: int
-    inner_package: int
-    data: bytearray
-    '''
-    raise NotImplementedError()
-
-def extract_y3ip_dst_addr(data:bytes)->tuple[int]:
-    '''returns dst_addr: tuple[int]'''
-    raise NotImplementedError()
-
-def decrease_ttl(data:bytes)->bytes:
-    return data
-    # send_y3cm(self.meta["local_address"][0], dst_addr, 'ttl expired') # TTL expired
-    raise NotImplementedError()
-
-def decrease_nt(data:bytes)->bytes:
-    raise NotImplementedError()
+from protocols import y3ip, y4sm
 
 class MController:
     def __init__(self):
@@ -64,23 +40,22 @@ class MController:
         else:
             logger.warning('No such node to remove')
 
-    def route_packet(self, package:tuple[int]):
-        dst_addr = Y3IP.get_addr(package)[1]          
+    def route_packet(self, package:tuple[int]): 
+        dst_addr = y3ip.get_addr(package)[1]          
         if dst_addr in self.meta.get("local_address", []):
             next_hop = (0, 0) # interface 0 is application manager
         else:
             next_hop = self.router[dst_addr]
         return next_hop
     
-    def process_packet(self, bpackage:bytes):
+    def process_packet(self, bpackage:bytes): 
         inner_mesh_id = bpackage[0]
         package = bpackage[1:]
         # iface add 1 byte in the beginning of package to identify inner_mesh_id
         next_hop = self.route_packet(package)
         if next_hop[0] != inner_mesh_id:
-            package = decrease_nt(package) # if next_hop inner_mesh_id != inner_mesh_id of package you should decrease nt
-        package = Y3IP.decrease_ttl(package)
-        
+            package = y3ip.decrease_nt(package) # if next_hop inner_mesh_id != inner_mesh_id of package you should decrease nt
+        package = y3ip.decrease_ttl(package)
         if next_hop not in self.commutator.keys():
             raise ValueError('No such interface to send packet')
         interface_id, iid = self.commutator[next_hop]
@@ -89,7 +64,8 @@ class MController:
 if __name__ == '__main__':
     mc = MController()
     mc.add_interface(0, AppManager())
-    mc.router.modify('route add 1234.1 0.0 200')
+    mc.router.modify('route add 1234.1.33 1.2 200')
+    mc.router.modify('route add 12.2.2 0.0 0')
     mc.add_node((0, 0), 0, 0)
-    pkg = Y3IP(0, [0, 0, 0, 0, 0, 0, 0, 0], 0, 50, 3, (11,11,11), (1234, 1), 0, b'Hello, world!').build()
+    pkg = y3ip(0, 333, [0, 0, 0, 0, 0, 0, 0, 0], 0, 50, 3, (11,11,11), (12,2,2)) | y4sm(10244, 1024, b'Hello world')
     mc.process_packet(bytes((0, )) + pkg)
