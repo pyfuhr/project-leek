@@ -1,0 +1,51 @@
+ifaces:
+  - name: if0
+    exec: "python if/udp.py"
+    args:
+      ports: "10000" # server listen port
+    beacon: # high level for overlay mode (send inside mesh)
+      enable: False
+      mode: 1 # 0 - not allowed to connect, 1 - only neighbours, 2 - as child, 3 - both modes
+      data:
+        ip: 123.123.123.123
+        port: "10000"
+  - name: if1
+    exec: "python if/lora.py"
+    args:
+      freq: 433
+      password: "passwd"
+    beacon: # low level (send outside mesh)
+      enable: True
+      mode: 3
+      data:
+        name: "ngh9"
+
+parents:
+  - if: if0
+    data:
+      ip: 231.231.231.231
+      port: 20000
+  - if: if0
+    data:
+      ip: 1.0.0.0
+      port: 8888
+
+neighbours:
+  - if: if1
+    data:
+      name: "ngh1"
+      password: "pass14"
+  - if: if1
+    data:
+      name: "ngh2"
+      password: "pass23"
+
+extention:
+  leek_master:
+    dns: null # list[list[int]] - array of leek-addresses
+    federative_cartographer: null # list[int] - leek-address
+  master:
+    dns: null # int | null - node id in mesh
+    bridges: null # # list[int] | null - array of node id in mesh
+
+# routetable and replcetable makes dynamic

@@ -16,24 +16,24 @@ class RouterException(Exception):
 
 class Router:
     def __init__(self):
-        self.table = {}
-        self.addr = {} # like cname in dns, but for addresses
+        self.routetable = {}
+        self.replaceaddr = {} # like cname in dns, but for addresses
 
     def redirect_address(self, addr:tuple[int]):
         check_leek_address(addr)
-        if addr not in self.addr.keys():
+        if addr not in self.replaceaddr.keys():
             return addr
-        return self.addr[addr]
+        return self.replaceaddr[addr]
     
     def add_address_redirect(self, srcs:list[tuple[int]], dst:tuple[int]):
         check_leek_address(dst)
         for src in srcs:
             check_leek_address(src)
-            self.addr[src] = dst
+            self.replaceaddr[src] = dst
 
     def remove_address_redirect(self, src:tuple[int]):
-        if src in self.addr.keys():
-            del self.addr[src]
+        if src in self.replaceaddr.keys():
+            del self.replaceaddr[src]
 
     def modify(self, cmd:str):
         '''
@@ -64,34 +64,34 @@ class Router:
     def __setitem__(self, k:tuple[int], v:tuple[tuple[int, int], int]):
         '''k is the address of remote node
         v is cortage contain (cortage next_hop(inner_mesh_id, node), int length of path)'''
-        if k not in self.table.keys():
-            self.table[k] = v
+        if k not in self.routetable.keys():
+            self.routetable[k] = v
             return
-        if self.table[k][1] >= v[1]:
-            self.table[k] = v
+        if self.routetable[k][1] >= v[1]:
+            self.routetable[k] = v
 
     def __delitem__(self, k:tuple[int]):
-        if k in self.table.keys():
-            del self.table[k]
+        if k in self.routetable.keys():
+            del self.routetable[k]
     
     def __getitem__(self, k:tuple[int]):
         redirected_addr = self.redirect_address(k)
         k_parent = redirected_addr
-        while k_parent not in self.table.keys():
+        while k_parent not in self.routetable.keys():
             k_parent = k_parent[:-1]
             if not k_parent: raise RouterException('Router cant route traffic to this node')
 
-        return self.table[k_parent][0]
+        return self.routetable[k_parent][0]
     # TODO: replace pickle
     def save(self):
         with open('router.pkl', 'wb') as f:
-            pickle.dump({'route': self.table, 'redirects': self.addr}, f)
+            pickle.dump({'route': self.routetable, 'redirects': self.replaceaddr}, f)
     # TODO
     def load(self):
         with open('router.pkl', 'rb') as f:
             data = pickle.load(f)
-            self.table = data['route']
-            self.addr = data['redirects']
+            self.routetable = data['route']
+            self.replaceaddr = data['redirects']
     
 if __name__ == '__main__':
     rt = Router()

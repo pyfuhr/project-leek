@@ -15,16 +15,19 @@ class MController:
         # applications manager (self.interfaces[0]) and then to listening application
 
     def add_interface(self, id:int, interface:Interface):
+        raise NotImplemented('TODO create new process, socket, and place here address')
         # pid is 
         self.interfaces[id] = interface
         logger.info(f'Interface added with id:{id}')
 
     def modify_interface(self, id:int, cmd:str):
+        raise NotImplemented()
         if id not in self.interfaces.keys():
             raise ValueError('No such interface')
         self.interfaces[id].modify(cmd)
     
     def del_interface(self, id:int):
+        raise NotImplemented()
         if id in self.interfaces.keys():
             del self.interfaces[id]
             logger.info(f'Interface with id:{id} deleted')
