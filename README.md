@@ -39,8 +39,8 @@ Leek - проект, представляющий собой коллекцию 
         - А запись заменяет только простые имена, в которых нет численых чанков (например: net1 -> A[n], net2.net3 -> B[m])
         - Чанк - часть адреса/число отделенная точками: адрес 1.2.3 - чанки 1, 2 и 3
 
-## Протоколы leek
-[Redirect](/wiki/protocols.md)
+## Markdown wiki book
+[Redirect](/wiki/all.md)
 
 ## TODO
 - [ ] add dynamic route states update protocol y3ru (at y4ap port 32)
